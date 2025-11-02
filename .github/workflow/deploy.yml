@@ -1,0 +1,50 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Check out your code
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      # 2. Install the Rust toolchain
+      - name: Install Rust 🦀
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      # 3. Install the Dioxus CLI
+      - name: Install dx-cli 📦
+        run: cargo install dioxus-cli
+
+      # 4. Run the dx build command
+      - name: Build 🔧
+        run: dx build --release
+
+      # 5. DEBUGGING: List the contents of the build folder
+      # This step will print out all files in the `dist` folder
+      # so we can be 100% sure the `assets` are there.
+      - name: List output folder 📁
+        run: ls -R dist
+
+      # 6. Add the 404.html hack and CNAME
+      - name: 404 Hack & CNAME 👻
+        run: |
+          cp dist/index.html dist/404.html
+          echo "photo.dhrubojpaul.com" > dist/CNAME
+
+      # 7. Deploy the `dist` folder to the `gh-pages` branch
+      - name: Deploy 🚀
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
